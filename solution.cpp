@@ -9,75 +9,34 @@ typedef vector<ll> vll;
 int B,L,D;
 vector<int> b;
 struct Lib{
-	int id, T, M;
+	int T, M;
 	vector<int> books;
-	vector<int> scan;
 };
 
 vector<Lib> libs;
+vector<int> ord;
 
 bool cmp(int x, int y){
 	return b[x] > b[y]; 
 }
 
-bool cmpLib(const Lib& x, const Lib& y) {
+bool cmpLib(int ix, int iy) {
+	auto& x = libs[ix];
+	auto& y = libs[iy];
 	return x.T == y.T ? x.M > y.M : x.T < y.T;
-}
-
-ll score1(){
-	unordered_set<int> booksSet;
-	int time =0;
-	for(auto &lib : libs){
-		time += lib.T;
-		int rem = (D-time)*lib.M;
-		for(auto book : lib.books){
-			if (rem <=0) break;
-			booksSet.insert(book);
-			rem--;
-		}
-	}
-	ll score=0;
-	for(auto book : booksSet){
-		score += b[book];
-	}
-	return score;
-}
-
-ll score2(){
-	unordered_set<int> booksSet;
-	int time =0;
-	for(auto &lib : libs){
-		lib.scan.clear();
-		time += lib.T;
-		int rem = (D-time)*lib.M;
-		for(auto book : lib.books){
-			if (rem <=0) break;
-			if(!booksSet.count(book)){
-				lib.scan.push_back(book);
-				booksSet.insert(book);
-				rem--;
-			}
-		}
-	}
-	ll score=0;
-	for(auto book : booksSet){
-		score += b[book];
-	}
-	return score;
 }
 
 unordered_map<int,pll> booksMap;
 ll score(){
 	booksMap.clear();
 	int time =0;
-	for(auto &lib : libs){
+	for(auto id: ord){
+		auto& lib = libs[id];
 		time += lib.T;
-		// int rem = (D-time)*lib.M;
 		int i=0;
 		for(auto book : lib.books) {
-			// if (i>=rem) break;
 			if(!booksMap.count(book) || booksMap[book].first > time+i/lib.M){
-				booksMap[book] = {time+i/lib.M, lib.id};
+				booksMap[book] = {time+i/lib.M, id};
 				i++;
 			}
 		}
@@ -90,17 +49,28 @@ ll score(){
 	return score;
 }
 
+void readSolution(string f){
+	ifstream fin(f);
+	int n, m, x;
+	fin>>n;
+	for(int i=0; i<n; ++i){
+		fin>>ord[i] >> m;
+		for(int j=0; j<m; ++j) fin>>x;
+	}
+}
+
 void print(string f) {
 	ofstream cout(f);
 	cout<<L<<"\n";
-	for(auto l: libs) {
-		cout<<l.id<<" "<<l.books.size()<<"\n";
+	for(auto id: ord) {
+		auto& l = libs[id];
+		cout<<id<<" "<<l.books.size()<<"\n";
 		for(auto book:l.books){
-			if(booksMap[book].second==l.id)
+			if(booksMap[book].second==id)
 				cout<<book<<" ";
 		}
 		for(auto book:l.books){
-			if(booksMap[book].second!=l.id)
+			if(booksMap[book].second!=id)
 				cout<<book<<" ";
 		}
 		cout<<"\n";
@@ -108,6 +78,7 @@ void print(string f) {
 }
 
 int main(int argc, char **argv){
+	string output = argv[1];
 	ios_base::sync_with_stdio(false);
 	cin>>B>>L>>D;
 	b.resize(B);
@@ -115,10 +86,8 @@ int main(int argc, char **argv){
 		cin>>a;
 	}
 	libs.assign(L, Lib());
-	int i=0;
 	for(auto &l : libs){
 		int n;
-		l.id = i++;
 		cin>>n>>l.T>>l.M;
 
 		l.books.resize(n);
@@ -127,21 +96,26 @@ int main(int argc, char **argv){
 		}
 		sort(l.books.begin(), l.books.end(), cmp);
 	}
-	sort(libs.begin(), libs.end(), cmpLib);
+	for(int i=0; i<L; ++i) ord.pb(i);
+
+	readSolution(output);
+	// sort(ord.begin(), ord.end(), cmpLib); print(output);
+
 	ll sc = score();
+	cerr<<output<< ": " <<sc<<" (initial)\n";
 
 	while(true){
 		int x = rand()%(libs.size()/2);
 		int y = rand()%(libs.size());
-		if(x==y) continue;
-		swap(libs[x], libs[y]);
+		if(x==y) y=(y+1)%libs.size();
+		swap(ord[x], ord[y]);
 		ll nsc = score();
 		if( nsc > sc ){
-			cerr<<"score: "<<argv[1]<< " : " <<nsc<<" (+"<<nsc-sc<<")\n";
+			cerr<<output<< ": " <<nsc<<" (+"<<nsc-sc<<")\n";
 			sc = nsc;
-			print(argv[1]);
+			print(output);
 		} else {
-			swap(libs[x], libs[y]);
+			swap(ord[x], ord[y]);
 		}
 	}
 
