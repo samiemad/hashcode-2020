@@ -10,6 +10,7 @@ int B,L,D;
 vector<int> b;
 struct Lib{
 	int T, M;
+	int netScore;
 	vector<int> books;
 };
 
@@ -20,10 +21,14 @@ bool cmp(int x, int y){
 	return b[x] > b[y]; 
 }
 
-bool cmpLib(int ix, int iy) {
-	auto& x = libs[ix];
-	auto& y = libs[iy];
+bool cmpSetup(const Lib& x, const Lib& y) {
 	return x.T == y.T ? x.M > y.M : x.T < y.T;
+}
+bool cmpNetScore(const Lib& x, const Lib& y) {
+	return x.netScore == y.netScore ? x.T < y.T : x.netScore > y.netScore;
+}
+inline bool cmpLib(int ix, int iy) {
+	return cmpSetup(libs[ix], libs[iy]);
 }
 
 unordered_map<int,pll> booksMap;
@@ -51,6 +56,10 @@ ll score(){
 
 void readSolution(string f){
 	ifstream fin(f);
+	if( !fin ){
+		cerr<<"Cannot read file!\n";
+		return;
+	}
 	int n, m, x;
 	fin>>n;
 	for(int i=0; i<n; ++i){
@@ -78,6 +87,7 @@ void print(string f) {
 }
 
 int main(int argc, char **argv){
+	srand(time(NULL));
 	string output = argv[1];
 	ios_base::sync_with_stdio(false);
 	cin>>B>>L>>D;
@@ -95,27 +105,30 @@ int main(int argc, char **argv){
 			cin>>book;
 		}
 		sort(l.books.begin(), l.books.end(), cmp);
+		for(int i=0; i<(D-l.T)*l.M && i<l.books.size(); ++i ) {
+			l.netScore += b[l.books[i]];
+		}
 	}
 	for(int i=0; i<L; ++i) ord.pb(i);
 
 	readSolution(output);
-	// sort(ord.begin(), ord.end(), cmpLib); print(output);
-
+	// sort(ord.begin(), ord.end(), cmpLib); 
+	// print(output);
 	ll sc = score();
 	cerr<<output<< ": " <<sc<<" (initial)\n";
 
 	while(true){
-		int x = rand()%(libs.size()/2);
+		int x = rand()%(libs.size());
 		int y = rand()%(libs.size());
 		if(x==y) y=(y+1)%libs.size();
-		swap(ord[x], ord[y]);
+		reverse(ord.begin()+x, ord.begin()+y+1);
 		ll nsc = score();
 		if( nsc > sc ){
 			cerr<<output<< ": " <<nsc<<" (+"<<nsc-sc<<")\n";
 			sc = nsc;
 			print(output);
 		} else {
-			swap(ord[x], ord[y]);
+			reverse(ord.begin()+x, ord.begin()+y+1);
 		}
 	}
 
