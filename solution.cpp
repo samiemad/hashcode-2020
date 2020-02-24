@@ -10,7 +10,8 @@ int B,L,D;
 vector<int> b;
 struct Lib{
 	int T, M;
-	int netScore;
+	ll netScore;
+	ll score;
 	vector<int> books;
 };
 
@@ -24,11 +25,17 @@ bool cmp(int x, int y){
 bool cmpSetup(const Lib& x, const Lib& y) {
 	return x.T == y.T ? x.M > y.M : x.T < y.T;
 }
+bool cmpNetScoreOverSetup(const Lib& x, const Lib& y) {
+	return x.netScore*y.T > y.netScore*x.T;
+}
+bool cmpScoreOverSetup(const Lib& x, const Lib& y) {
+	return x.score*y.T > y.score*x.T;
+}
 bool cmpNetScore(const Lib& x, const Lib& y) {
 	return x.netScore == y.netScore ? x.T < y.T : x.netScore > y.netScore;
 }
 inline bool cmpLib(int ix, int iy) {
-	return cmpSetup(libs[ix], libs[iy]);
+	return cmpScoreOverSetup(libs[ix], libs[iy]);
 }
 
 unordered_map<int,pll> booksMap;
@@ -86,6 +93,13 @@ void print(string f) {
 	}
 }
 
+vector<int> initIdx() {
+	cerr<<"initIdx()\n";
+	vector<int> v(L);
+	for(int i=0; i<L; ++i) v[i] = i;
+	return v;
+}
+
 int main(int argc, char **argv){
 	srand(time(NULL));
 	string output = argv[1];
@@ -103,6 +117,7 @@ int main(int argc, char **argv){
 		l.books.resize(n);
 		for(auto &book: l.books){
 			cin>>book;
+			l.score += b[book];
 		}
 		sort(l.books.begin(), l.books.end(), cmp);
 		for(int i=0; i<(D-l.T)*l.M && i<l.books.size(); ++i ) {
@@ -117,18 +132,37 @@ int main(int argc, char **argv){
 	ll sc = score();
 	cerr<<output<< ": " <<sc<<" (initial)\n";
 
+	// sort(ord.begin(), ord.end(), cmpLib); 
+	// cerr<<output<< ": " <<score()<<" (sorted)\n";
+
+	vector<int> idx = initIdx();
+
 	while(true){
-		int x = rand()%(libs.size());
-		int y = rand()%(libs.size());
-		if(x==y) y=(y+1)%libs.size();
-		reverse(ord.begin()+x, ord.begin()+y+1);
+		if(idx.size()<2) idx = initIdx();
+		random_shuffle(idx.begin(), idx.end());
+		int x = idx.back();
+		int y = idx[idx.size()-2];
+		if( x==y ){
+			cerr<<"Panic!!"<<idx.size()<<" :: "<<L<<"\n";
+			for(auto i:idx) cerr<<", "<<i;
+			cerr<<"\n";
+			return 0;
+		}
+		swap(ord[x], ord[y]);
+		// reverse(ord.begin()+x, ord.begin()+y+1);
 		ll nsc = score();
 		if( nsc > sc ){
 			cerr<<output<< ": " <<nsc<<" (+"<<nsc-sc<<")\n";
 			sc = nsc;
 			print(output);
 		} else {
-			reverse(ord.begin()+x, ord.begin()+y+1);
+			swap(ord[x], ord[y]);
+			// reverse(ord.begin()+x, ord.begin()+y+1);
+			if( nsc == sc ) {
+				idx.pop_back();
+				idx.pop_back();
+				// cerr<<"rem eq "<<x<<","<<y<<"\n";
+			}
 		}
 	}
 
