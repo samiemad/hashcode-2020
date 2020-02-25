@@ -25,6 +25,9 @@ bool cmp(int x, int y){
 bool cmpSetup(const Lib& x, const Lib& y) {
 	return x.T == y.T ? x.M > y.M : x.T < y.T;
 }
+bool cmpNumBooks(const Lib& x, const Lib& y) {
+	return x.books.size() > y.books.size();
+}
 bool cmpNetScoreOverSetup(const Lib& x, const Lib& y) {
 	return x.netScore*y.T > y.netScore*x.T;
 }
@@ -59,6 +62,41 @@ ll score(){
 		score += b[book.first];
 	}
 	return score;
+}
+
+void sortOrd() {
+	vector<int> bestOrd;
+
+	int msc = 0, sc = 0;
+	for(int i=0; i<100; ++i){
+		random_shuffle(ord.begin(), ord.end());
+		sort(ord.begin(), ord.end(), [](int a, int b){ return cmpNetScore(libs[a], libs[b]); }); 
+		sc = score();
+		if(sc > msc) {msc = sc; bestOrd = ord;}
+
+		random_shuffle(ord.begin(), ord.end());
+		sort(ord.begin(), ord.end(), [](int a, int b){ return cmpSetup(libs[a], libs[b]); }); 
+		sc = score();
+		if(sc > msc) {msc = sc; bestOrd = ord;}
+
+		random_shuffle(ord.begin(), ord.end());
+		sort(ord.begin(), ord.end(), [](int a, int b){ return cmpScoreOverSetup(libs[a], libs[b]); }); 
+		sc = score();
+		if(sc > msc) {msc = sc; bestOrd = ord;}
+
+		random_shuffle(ord.begin(), ord.end());
+		sort(ord.begin(), ord.end(), [](int a, int b){ return cmpNetScoreOverSetup(libs[a], libs[b]); }); 
+		sc = score();
+		if(sc > msc) {msc = sc; bestOrd = ord;}
+
+		random_shuffle(ord.begin(), ord.end());
+		sort(ord.begin(), ord.end(), [](int a, int b){ return cmpNumBooks(libs[a], libs[b]); }); 
+		sc = score();
+		if(sc > msc) {msc = sc; bestOrd = ord;}
+
+		cerr<<"msc = "<<msc<<"\n";
+	}
+	ord = bestOrd;
 }
 
 void readSolution(string f){
@@ -106,9 +144,12 @@ int main(int argc, char **argv){
 	ios_base::sync_with_stdio(false);
 	cin>>B>>L>>D;
 	b.resize(B);
+	ll maxScore = 0;
 	for(auto &a: b) {
 		cin>>a;
+		maxScore += a;
 	}
+	cerr<< "Max Score = "<<maxScore<<"\n";
 	libs.assign(L, Lib());
 	for(auto &l : libs){
 		int n;
@@ -126,14 +167,11 @@ int main(int argc, char **argv){
 	}
 	for(int i=0; i<L; ++i) ord.pb(i);
 
+	// sortOrd(); return 0;
+
 	readSolution(output);
-	// sort(ord.begin(), ord.end(), cmpLib); 
-	// print(output);
 	ll sc = score();
 	cerr<<output<< ": " <<sc<<" (initial)\n";
-
-	// sort(ord.begin(), ord.end(), cmpLib); 
-	// cerr<<output<< ": " <<score()<<" (sorted)\n";
 
 	vector<int> idx = initIdx();
 
