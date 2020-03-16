@@ -46,15 +46,18 @@ ll score(){
 	booksMap.clear();
 	int time =0;
 	for(auto id: ord){
-		auto& lib = libs[id];
-		time += lib.T;
+		time += libs[id].T;
+	}
+	for(int j=L-1; j>=0; --j){
+		auto& lib = libs[ord[j]];
 		int i=0;
 		for(auto book : lib.books) {
 			if(!booksMap.count(book) || booksMap[book].first > time+i/lib.M){
-				booksMap[book] = {time+i/lib.M, id};
+				booksMap[book] = {time+i/lib.M, ord[j]};
 				i++;
 			}
 		}
+		time -= lib.T;
 	}
 	ll score=0;
 	for(auto book : booksMap){
